@@ -2,6 +2,7 @@ import torch
 from torch import nn
 from model.ConvNet import ConvNet
 from model.Rank import Rank
+import torch.nn.functional as F
 
 
 class DeepRank(nn.Module):
@@ -9,17 +10,12 @@ class DeepRank(nn.Module):
     def __init__(self):
         super(DeepRank, self).__init__()
         self.convnet = ConvNet()
-        self.rank1 = Rank(conv_strides=16, pool_size=3, pool_strides=4)
-        self.rank2 = Rank(conv_strides=32, pool_size=7, pool_strides=2)
+        self.rank1 = Rank(conv_strides=(16, 16), pool_size=(3, 3), pool_strides=(4, 4))
+        self.rank2 = Rank(conv_strides=(32, 32), pool_size=(7, 7), pool_strides=(2, 2))
+        self.embedding = nn.Linear(in_features=5056, out_features=4096)
 
     def forward(self, x):
-        conv_output = self.convnet(x)
-        rank1_output = self.rank1(x)
-        rank2_output = self.rank2(x)
-
-        rank_cat = torch.cat(rank1_output, rank2_output)
-        combine = torch.cat(rank_cat, conv_output)
-
-        print(combine.size())
-
-        return combine
+        rank_cat = torch.cat((self.rank1(x), self.rank2(x)))
+        x = torch.cat((rank_cat, self.convnet(x)))
+        x = self.embedding(x)
+        return F.normalize(x, p=2, dim=0)

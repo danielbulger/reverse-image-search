@@ -1,4 +1,4 @@
-from torch import nn
+from torch import nn, flatten
 import torchvision.models as models
 import torch.nn.functional as F
 
@@ -31,7 +31,7 @@ class ConvNet(nn.Module):
         x = self.model(x)
 
         # Flatten the output of the CNN
-        x = x.view(x.size()[0], -1)
+        x = flatten(x)
 
         x = self.relu(self.fc1(x))
         x = self.dropout(x)
@@ -40,4 +40,4 @@ class ConvNet(nn.Module):
         x = self.dropout(x)
 
         # L2 normalize the output
-        return F.normalize(x, p=2, dim=1)
+        return F.normalize(x, p=2, dim=0)
