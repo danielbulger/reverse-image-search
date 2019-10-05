@@ -1,4 +1,5 @@
 from argparse import ArgumentParser
+
 from model.DeepRank import DeepRank
 from model.TripletLoss import TripletLoss
 from data import dataset
@@ -12,16 +13,16 @@ import os
 def parse_args():
     parser = ArgumentParser()
 
-    parser.add_argument('--epochs', type=int, help='Number of iterations to run over the dataset')
-    parser.add_argument('--lr', type=float, help='The Learning Rate')
+    parser.add_argument('--epochs', type=int, required=True, help='Number of iterations to run over the dataset')
+    parser.add_argument('--lr', type=float, default=0.001, help='The Learning Rate')
+    parser.add_argument('--log-dir', default="./log/", type=str, help="Directory to save checkpoint logs")
+    parser.add_argument('--checkpoint', default=50, type=int, help='Number of iterations between each checkpoint')
+    parser.add_argument('--dataset', type=str, required=True, help="Path containing the Image data set")
+    parser.add_argument('--workers', type=int, help='Number of worker threads to use')
+    parser.add_argument('--batch-size', type=int, required=True, help='Number of samples per batch')
+    parser.add_argument('--crop-size', type=int, default=256, help='Dimensions to crop the images to')
     parser.add_argument('--cuda', default=False, type=lambda x: (str(x).lower() == 'true'),
                         help="Whether to train using CUDA")
-    parser.add_argument('--log-dir', default="./logs/", type=str, help="Directory to save checkpoint logs")
-    parser.add_argument('--checkpoint', default=50, type=int, help='Number of iterations between each checkpoint')
-    parser.add_argument('--dataset', type=str, help="Path containing the Image data set")
-    parser.add_argument('--workers', type=int, help='Number of worker threads to use')
-    parser.add_argument('--batch-size', type=int, help='Number of samples per batch')
-    parser.add_argument('--crop-size', type=int, default=256, help='Dimensions to crop the images to')
 
     return parser.parse_args()
 
@@ -52,18 +53,9 @@ def main():
     optimiser = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     data_loader = torch.utils.data.DataLoader(
-        dataset.get_train_dataset(
+        dataset.TripletDataSet(
             args.dataset,
-            args.crop_size
-        ),
-        batch_size=args.batch_size,
-        shuffle=True,
-        num_workers=args.workers
-    )
-
-    negative_data_loader = torch.utils.data.DataLoader(
-        dataset.get_train_dataset(
-            args.dataset,
+            1000,
             args.crop_size
         ),
         batch_size=args.batch_size,
@@ -74,19 +66,17 @@ def main():
     for epoch in range(args.epochs):
         running_loss = 0.0
 
-        for index, data in enumerate(zip(negative_data_loader, data_loader)):
-            batch, target = data
+        for index, data in enumerate(data_loader):
 
             # Move this to the GPU if available
             if args.cuda:
-                batch = batch.to(device)
-                target = target.to(device)
+                data = data.to(device)
 
             optimiser.zero_grad()
-            prediction = model(batch)
+            prediction = model(data)
 
-            # Calculate the loss between the prediction and the target.
-            loss = triplet_loss(prediction, target)
+            # Calculate the triplet loss, we don't have a target so set as none.
+            loss = triplet_loss(prediction, None)
             loss.backward()
 
             optimiser.step()

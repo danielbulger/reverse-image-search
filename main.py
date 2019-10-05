@@ -1,21 +1,22 @@
 from argparse import ArgumentParser
 
 import torch
-from data.dataset import get_images
 from PIL import Image
 
 from torch.autograd import Variable
 from torchvision.transforms import ToTensor
 from annoy import AnnoyIndex
 
+from data.dataset import get_images
+
 
 def parse_args():
     parser = ArgumentParser()
 
     parser.add_argument('--cuda', default=False, type=lambda x: (str(x).lower() == 'true'),
-                        help="Whether to train using CUDA")
+                        help="Whether to run using CUDA")
     parser.add_argument('--model', type=str, help='The torch model to use')
-    parser.add_argument('--data', type=str, help='The folder of images to read')
+    parser.add_argument('--dataset', type=str, help='The folder of images to read')
 
     return parser.parse_args()
 
@@ -32,7 +33,7 @@ def main():
 
     annoy = AnnoyIndex(4096)
 
-    for image in get_images(args.data):
+    for image in get_images(args.dataset):
         input_image = Image.open(image).convert('RGB')
         input_tensor = Variable(ToTensor()(input_image))
         input_tensor = input_tensor.view(1, -1, input_image.size[1], input_image.size[0])
