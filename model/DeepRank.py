@@ -12,7 +12,7 @@ class DeepRank(nn.Module):
         self.n_rank = TripletConvNet()
 
     def forward(self, x):
-        query = self.q_rank(x[0])
-        positive = self.p_rank(x[1])
-        negative = self.n_rank(x[2])
+        query = self.q_rank(x[:, 0])
+        positive = self.p_rank(x[:, 1])
+        negative = self.n_rank(x[:, 2])
         return torch.stack([query, positive, negative])

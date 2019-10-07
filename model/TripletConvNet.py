@@ -15,7 +15,7 @@ class TripletConvNet(nn.Module):
         self.embedding = nn.Linear(in_features=5056, out_features=4096)
 
     def forward(self, x):
-        rank_cat = torch.cat((self.rank1(x), self.rank2(x)))
-        x = torch.cat((rank_cat, self.conv_net(x)))
+        rank_cat = torch.cat([self.rank1(x), self.rank2(x)], dim=1)
+        x = torch.cat([rank_cat, self.conv_net(x)], dim=1)
         x = self.embedding(x)
-        return F.normalize(x, p=2, dim=0)
+        return F.normalize(x, dim=0)

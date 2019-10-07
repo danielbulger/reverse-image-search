@@ -17,6 +17,7 @@ def parse_args():
                         help="Whether to run using CUDA")
     parser.add_argument('--model', type=str, help='The torch model to use')
     parser.add_argument('--dataset', type=str, help='The folder of images to read')
+    parser.add_argument('--output', type=str, default='./log/embedding-ann')
 
     return parser.parse_args()
 
@@ -31,12 +32,14 @@ def main():
     model = torch.load(args.model)
     model.eval()
 
-    annoy = AnnoyIndex(4096)
+    annoy = AnnoyIndex(4096, metric='angular')
 
     for image in get_images(args.dataset):
         input_image = Image.open(image).convert('RGB')
-        input_tensor = Variable(ToTensor()(input_image))
-        input_tensor = input_tensor.view(1, -1, input_image.size[1], input_image.size[0])
+        input_image = input_image.resize((224, 224))
+
+        # Create tensor from the image.
+        input_tensor = torch.stack([ToTensor()(input_image)])
 
         if args.cuda:
             input_tensor = input_tensor.to(device)
@@ -50,7 +53,7 @@ def main():
         annoy.add_item(output)
 
     annoy.build(20)
-    annoy.save('embeddings.ann')
+    annoy.save(args.output)
 
 
 if __name__ == '__main__':

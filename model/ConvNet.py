@@ -31,7 +31,7 @@ class ConvNet(nn.Module):
         x = self.model(x)
 
         # Flatten the output of the CNN
-        x = flatten(x)
+        x = flatten(x, start_dim=1)
 
         x = self.relu(self.fc1(x))
         x = self.dropout(x)
@@ -40,4 +40,4 @@ class ConvNet(nn.Module):
         x = self.dropout(x)
 
         # L2 normalize the output
-        return F.normalize(x, p=2, dim=0)
+        return F.normalize(x, dim=0)

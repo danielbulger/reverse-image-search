@@ -12,5 +12,5 @@ class Rank(nn.Module):
     def forward(self, x):
         x = self.conv(x)
         x = self.pool(x)
-        x = flatten(x)
-        return F.normalize(x, p=2, dim=0)
+        x = flatten(x, start_dim=1)
+        return F.normalize(x, dim=0)

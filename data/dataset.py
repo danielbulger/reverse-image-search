@@ -1,6 +1,7 @@
 import glob
 import os
 
+import torch
 from torch.utils import data
 from torchvision import transforms
 from PIL import Image
@@ -95,7 +96,7 @@ class TripletDataSet(data.Dataset):
         flipped = self.flip_transform(flipped)
         target = self.target_transform(target)
 
-        return train, flipped, target
+        return torch.stack([train, flipped, target])
 
     def __len__(self):
         return self.length

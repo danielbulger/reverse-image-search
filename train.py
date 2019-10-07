@@ -49,7 +49,7 @@ def main():
     if args.cuda:
         model = model.cuda(device)
 
-    triplet_loss = TripletLoss(args.batch_size)
+    triplet_loss = TripletLoss(args.batch_size, device)
     optimiser = torch.optim.Adam(model.parameters(), lr=args.lr)
 
     data_loader = torch.utils.data.DataLoader(
@@ -84,7 +84,7 @@ def main():
             # Sum the loss from this batch into the checkpoint total
             running_loss += loss.item()
 
-            if index != 0 and index % (args.checkpoint - 1) == 0:
+            if index != 0 and index % args.checkpoint == 0:
                 checkpoint(model, args.log_dir, "checkpoint-{}-{}.pth".format(epoch, index))
                 print('[%d,%d] loss: %.6f' % (epoch, index, running_loss / args.batch_size))
                 running_loss = 0.0
