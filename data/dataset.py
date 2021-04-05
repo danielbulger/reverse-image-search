@@ -47,7 +47,6 @@ def generate_categories(path):
 class TripletDataSet(data.Dataset):
 
     def __init__(self, dataset_path, length, crop_size):
-        random.seed(0x1234)
         self.length = length
         self.category_list, self.category_files = generate_categories(dataset_path)
         self.category_count = len(self.category_list)
